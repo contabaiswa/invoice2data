@@ -60,9 +60,12 @@ class InvoiceTemplate(OrderedDict):
             self.options.update(self["options"])
 
         # Set issuer, if it doesn't exist.
-        if "issuer" not in self.keys():
-            self["issuer"] = self["keywords"][0]
-
+        try:
+            if "issuer" not in self.keys():
+                self["issuer"] = self["keywords"][0]
+        except KeyError:
+            self["issuer"] = ""
+            
     def prepare_input(self, extracted_str):
         """
         Input raw string and do transformations, as set in template file.
@@ -161,7 +164,7 @@ class InvoiceTemplate(OrderedDict):
                 logger.debug("field=%s | regexp=%s", k, v)
 
                 sum_field = False
-                if k.startswith("sum_amount") and type(v) is list:
+                if k.startswith("sum_") and type(v) is list:
                     k = k[4:]  # remove 'sum_' prefix
                     sum_field = True
                 # Fields can have multiple expressions
@@ -184,7 +187,7 @@ class InvoiceTemplate(OrderedDict):
                             logger.error(
                                 "Date parsing failed on date '%s'", res_find[0]
                             )
-                            return None
+                            # return None
                     elif k.startswith("amount"):
                         if sum_field:
                             output[k] = 0
@@ -229,4 +232,6 @@ class InvoiceTemplate(OrderedDict):
                     required_fields, fields
                 )
             )
+            if output:
+                return output
             return None

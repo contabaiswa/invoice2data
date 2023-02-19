@@ -38,7 +38,7 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     return yaml.load(stream, OrderedLoader)
 
 
-def read_templates(folder=None):
+def read_templates(folder=None, filename=None):
     """
     Load yaml templates from template folder. Return list of dicts.
 
@@ -77,27 +77,45 @@ def read_templates(folder=None):
     """
 
     output = []
-
     if folder is None:
         folder = pkg_resources.resource_filename(__name__, "templates")
 
-    for path, subdirs, files in os.walk(folder):
-        for name in sorted(files):
-            if name.endswith(".yml"):
-                with open(os.path.join(path, name), "rb") as f:
+    if folder[-4:] == '.yml':
+        with open(folder, "rb") as f:
                     encoding = chardet.detect(f.read())["encoding"]
-                with codecs.open(
-                    os.path.join(path, name), encoding=encoding
-                ) as template_file:
-                    tpl = ordered_load(template_file.read())
-                tpl["template_name"] = name
+        with codecs.open(
+            folder, encoding=encoding
+        ) as template_file:
+            tpl = ordered_load(template_file.read())
+        name = filename
+        tpl["template_name"] = name
 
-                # Test if all required fields are in template:
-                assert "keywords" in tpl.keys(), "Missing keywords field."
+        # # Test if all required fields are in template:
+        # assert "keywords" in tpl.keys(), "Missing keywords field."
 
-                # Keywords as list, if only one.
-                if type(tpl["keywords"]) is not list:
-                    tpl["keywords"] = [tpl["keywords"]]
+        # Keywords as list, if only one.
+        if type(tpl["keywords"]) is not list:
+            tpl["keywords"] = [tpl["keywords"]]
 
-                output.append(InvoiceTemplate(tpl))
+        output.append(InvoiceTemplate(tpl))
+    else:
+        for path, subdirs, files in os.walk(folder):
+            for name in sorted(files):
+                if name.endswith(".yml"):
+                    with open(os.path.join(path, name), "rb") as f:
+                        encoding = chardet.detect(f.read())["encoding"]
+                    with codecs.open(
+                        os.path.join(path, name), encoding=encoding
+                    ) as template_file:
+                        tpl = ordered_load(template_file.read())
+                    tpl["template_name"] = name
+
+                    # # Test if all required fields are in template:
+                    # assert "keywords" in tpl.keys(), "Missing keywords field."
+
+                    # Keywords as list, if only one.
+                    if type(tpl["keywords"]) is not list:
+                        tpl["keywords"] = [tpl["keywords"]]
+
+                    output.append(InvoiceTemplate(tpl))
     return output

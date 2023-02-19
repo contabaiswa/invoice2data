@@ -6,14 +6,22 @@ import shutil
 import os
 from os.path import join
 import logging
+from tools.read_pdf import read_pdf
 
-from .input import pdftotext
-from .input import pdfminer_wrapper
-from .input import tesseract
-from .input import tesseract4
-from .input import gvision
+from PIL import Image, ImageFile
+import pytesseract
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+
+# from .input import pdftotext
+# from .input import pdfminer_wrapper
+# from .input import tesseract
+# from .input import tesseract4
+# from .input import gvision
 
 from invoice2data.extract.loader import read_templates
+# templates = read_templates('invoice2data/templates')
+templates = read_templates('templates')
 
 from .output import to_csv
 from .output import to_json
@@ -22,18 +30,18 @@ from .output import to_xml
 
 logger = logging.getLogger(__name__)
 
-input_mapping = {
-    "pdftotext": pdftotext,
-    "tesseract": tesseract,
-    "tesseract4": tesseract4,
-    "pdfminer": pdfminer_wrapper,
-    "gvision": gvision,
-}
+# input_mapping = {
+#     "pdftotext": pdftotext,
+#     "tesseract": tesseract,
+#     "tesseract4": tesseract4,
+#     "pdfminer": pdfminer_wrapper,
+#     "gvision": gvision,
+# }
 
 output_mapping = {"csv": to_csv, "json": to_json, "xml": to_xml, "none": None}
 
 
-def extract_data(invoicefile, templates=None, input_module=pdftotext):
+def extract_data(invoicefile, templates=templates, input_module=None, reload_templates=False, template=None, extracted_str=None):
     """Extracts structured data from PDF/image invoices.
 
     This function uses the text extracted from a PDF file or image and
@@ -75,25 +83,50 @@ def extract_data(invoicefile, templates=None, input_module=pdftotext):
      'currency': 'INR', 'desc': 'Invoice IBZY2087 from OYO'}
 
     """
-    if templates is None:
-        templates = read_templates()
+    chosen_template = None
 
-    # print(templates[0])
-    extracted_str = input_module.to_text(invoicefile).decode("utf-8")
+    if templates is None:
+        # templates = read_templates()
+        templates = read_templates('templates')
+
+    if reload_templates:
+        # templates = read_templates('invoice2data//templates')
+        templates = read_templates('templates')
+
+    if template:
+        # templates = read_templates('invoice2data//templates/' + template, filename=template)
+        templates = read_templates('templates/' + template, filename=template)
+
+    files_created = None
+    if not extracted_str:
+        # print(templates[0])
+        if invoicefile[-3:].lower() == 'png' or invoicefile[-3:].lower() == 'jpg':
+            extracted_str = pytesseract.image_to_string(Image.open(invoicefile))
+        elif invoicefile[-3:].lower() == 'pdf': 
+            # extracted_str, files_created, scaled_img_arrays = read_pdf(invoicefile)
+            extracted_str, files_created = read_pdf(invoicefile)
 
     logger.debug("START pdftotext result ===========================")
     logger.debug(extracted_str)
     logger.debug("END pdftotext result =============================")
 
-    logger.debug("Testing {} template files".format(len(templates)))
-    for t in templates:
-        optimized_str = t.prepare_input(extracted_str)
+    # logger.debug("Testing {} template files".format(len(templates)))
+    if not template:
+        for t in templates:
+            optimized_str = t.prepare_input(extracted_str)
 
-        if t.matches_input(optimized_str):
-            return t.extract(optimized_str,invoicefile)
+            if t.matches_input(optimized_str):
+                chosen_template = t
+                return t.extract(optimized_str,invoicefile), files_created, optimized_str, chosen_template
+    else:
+        t = templates[0]
+        optimized_str = t.prepare_input(extracted_str)
+        chosen_template = t
+        return t.extract(optimized_str,invoicefile), files_created, optimized_str, chosen_template
 
     logger.error("No template for %s", invoicefile)
-    return False
+    # print(extracted_str)
+    return False, files_created, optimized_str, chosen_template
 
 
 def create_parser():
@@ -105,7 +138,7 @@ def create_parser():
 
     parser.add_argument(
         "--input-reader",
-        choices=input_mapping.keys(),
+        # choices=input_mapping.keys(),
         default="pdftotext",
         help="Choose text extraction function. Default: pdftotext",
     )
@@ -194,7 +227,7 @@ def main(args=None):
     else:
         logging.basicConfig(level=logging.INFO)
 
-    input_module = input_mapping[args.input_reader]
+    # input_module = input_mapping[args.input_reader]
     output_module = output_mapping[args.output_format]
 
     templates = []
@@ -207,7 +240,8 @@ def main(args=None):
         templates += read_templates()
     output = []
     for f in args.input_files:
-        res = extract_data(f.name, templates=templates, input_module=input_module)
+        # res = extract_data(f.name, templates=templates, input_module=input_module)
+        res = extract_data(f.name, templates=templates, input_module=pytesseract)
         if res:
             logger.info(res)
             output.append(res)
