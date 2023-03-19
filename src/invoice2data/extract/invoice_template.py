@@ -107,8 +107,10 @@ class InvoiceTemplate(OrderedDict):
         amount_pipe = value.replace(self.options["decimal_separator"], "|")
         # remove all possible thousands separators
         amount_pipe_no_thousand_sep = re.sub(r"[.,\s]", "", amount_pipe)
+        if "/" in amount_pipe_no_thousand_sep:
+            amount_pipe_no_thousand_sep = eval(str(amount_pipe_no_thousand_sep).replace("|", "."))
         # put dot as decimal sep
-        return float(amount_pipe_no_thousand_sep.replace("|", "."))
+        return float(str(amount_pipe_no_thousand_sep).replace("|", "."))
 
     def parse_date(self, value):
         """Parses date and returns date after parsing"""
