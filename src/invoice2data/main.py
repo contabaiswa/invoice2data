@@ -117,12 +117,12 @@ def extract_data(invoicefile, templates=templates, input_module=None, reload_tem
 
             if t.matches_input(optimized_str):
                 chosen_template = t
-                return t.extract(optimized_str,invoicefile), files_created, optimized_str, chosen_template
+                return t.extract(optimized_str), files_created, optimized_str, chosen_template
     else:
         t = templates[0]
         optimized_str = t.prepare_input(extracted_str)
         chosen_template = t
-        return t.extract(optimized_str,invoicefile), files_created, optimized_str, chosen_template
+        return t.extract(optimized_str), files_created, optimized_str, chosen_template
 
     logger.error("No template for %s", invoicefile)
     # print(extracted_str)
