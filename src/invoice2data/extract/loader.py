@@ -15,6 +15,9 @@ import chardet
 
 logging.getLogger("chardet").setLevel(logging.WARNING)
 
+DROPBOX_PATH = os.getenv('dropbox')
+templates_filepath = DROPBOX_PATH + "\\shared settings\\templates" 
+
 
 # borrowed from http://stackoverflow.com/a/21912744
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
@@ -38,16 +41,17 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     return yaml.load(stream, OrderedLoader)
 
 
-def read_templates(folder=None, filename=None):
+def read_templates(filepath=None, filename=None):
     """
-    Load yaml templates from template folder. Return list of dicts.
+    Load yaml templates from template filepath. Return list of dicts.
 
-    Use built-in templates if no folder is set.
+    Use built-in templates if no filepath is set.
 
     Parameters
     ----------
-    folder : str
-        user defined folder where they stores their files, if None uses built-in templates
+    filepath : str
+        user defined filepath where they stores their files, if None uses built-in templates
+        can either be a directory or a single template.yml filepath
 
     Returns
     -------
@@ -77,17 +81,19 @@ def read_templates(folder=None, filename=None):
     """
 
     output = []
-    if folder is None:
-        folder = pkg_resources.resource_filename(__name__, "templates")
+    if not filepath:
+        filepath = templates_filepath
 
-    if folder[-4:] == '.yml':
-        with open(folder, "rb") as f:
+    if filepath[-4:] == '.yml':
+        name = filepath[:-4] 
+        if "\\" not in filepath or "/" not in filepath:
+             filepath = f"{templates_filepath}\\" + filepath
+        with open(filepath, "rb") as f:
                     encoding = chardet.detect(f.read())["encoding"]
         with codecs.open(
-            folder, encoding=encoding
+            filepath, encoding=encoding
         ) as template_file:
             tpl = ordered_load(template_file.read())
-        name = filename
         tpl["template_name"] = name
 
         # # Test if all required fields are in template:
@@ -99,7 +105,7 @@ def read_templates(folder=None, filename=None):
 
         output.append(InvoiceTemplate(tpl))
     else:
-        for path, subdirs, files in os.walk(folder):
+        for path, subdirs, files in os.walk(filepath):
             for name in sorted(files):
                 if name.endswith(".yml"):
                     with open(os.path.join(path, name), "rb") as f:

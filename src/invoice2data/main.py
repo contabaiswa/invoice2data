@@ -13,15 +13,18 @@ import pytesseract
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
+DROPBOX_PATH = os.getenv('dropbox')
+templates_filepath = DROPBOX_PATH + "\\shared settings\\templates" 
+
 # from .input import pdftotext
 # from .input import pdfminer_wrapper
 # from .input import tesseract
 # from .input import tesseract4
 # from .input import gvision
 
-from invoice2data.extract.loader import read_templates
+from invoice2datamod.src.invoice2data.extract.loader import read_templates
 # templates = read_templates('invoice2data/templates')
-templates = read_templates('templates')
+templates = read_templates()
 
 from .output import to_csv
 from .output import to_json
@@ -87,15 +90,15 @@ def extract_data(invoicefile, templates=templates, input_module=None, reload_tem
 
     if templates is None:
         # templates = read_templates()
-        templates = read_templates('templates')
+        templates = read_templates(templates_filepath)
 
     if reload_templates:
         # templates = read_templates('invoice2data//templates')
-        templates = read_templates('templates')
+        templates = read_templates(templates_filepath)
 
     if template:
         # templates = read_templates('invoice2data//templates/' + template, filename=template)
-        templates = read_templates('templates/' + template, filename=template)
+        templates = read_templates(template)
 
     files_created = None
     if not extracted_str:

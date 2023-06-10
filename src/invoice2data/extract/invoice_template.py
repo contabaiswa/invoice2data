@@ -135,7 +135,7 @@ class InvoiceTemplate(OrderedDict):
             return self.parse_date(value)
         assert False, "Unknown type"
 
-    def extract(self, optimized_str,path):
+    def extract(self, optimized_str,path=None):
         """
         Given a template file and a string, extract matching data fields.
         """
@@ -209,9 +209,10 @@ class InvoiceTemplate(OrderedDict):
         output["currency"] = self.options["currency"]
 
         # Run plugins:
-        for plugin_keyword, plugin_func in PLUGIN_MAPPING.items():
-            if plugin_keyword in self.keys():
-                plugin_func.extract(self, optimized_str, path, output)
+        if path:
+            for plugin_keyword, plugin_func in PLUGIN_MAPPING.items():
+                if plugin_keyword in self.keys():
+                    plugin_func.extract(self, optimized_str, path, output)
 
         # If required fields were found, return output, else log error.
         if "required_fields" not in self.keys():
