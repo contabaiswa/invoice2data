@@ -98,6 +98,11 @@ def extract_data(invoicefile, templates=templates, input_module=None, reload_tem
 
     if template:
         # templates = read_templates('invoice2data//templates/' + template, filename=template)
+        template = template.replace("/", "\\")
+        if template[-4:].lower() != ".yml":
+            template = template + ".yml"
+        if "\\" not in template:
+            template = templates_filepath + "\\" + template
         templates = read_templates(template)
 
     files_created = None
