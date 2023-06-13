@@ -135,7 +135,7 @@ class InvoiceTemplate(OrderedDict):
             return self.parse_date(value)
         assert False, "Unknown type"
 
-    def extract(self, optimized_str,path=None):
+    def extract(self, optimized_str, path=None):
         """
         Given a template file and a string, extract matching data fields.
         """

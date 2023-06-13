@@ -14,6 +14,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
 DROPBOX_PATH = os.getenv('dropbox')
+if not DROPBOX_PATH:
+    raise ValueError("Dropbox path unknown in windows path, please add the 'dropbox' environment path to windows system env")
 templates_filepath = DROPBOX_PATH + "\\shared settings\\templates" 
 
 # from .input import pdftotext
@@ -98,6 +100,11 @@ def extract_data(invoicefile, templates=templates, input_module=None, reload_tem
 
     if template:
         # templates = read_templates('invoice2data//templates/' + template, filename=template)
+        template = template.replace("/", "\\")
+        if template[-4:].lower() != ".yml":
+            template = template + ".yml"
+        if "\\" not in template:
+            template = templates_filepath + "\\" + template
         templates = read_templates(template)
 
     files_created = None

@@ -86,7 +86,8 @@ def read_templates(filepath=None, filename=None):
 
     if filepath[-4:] == '.yml':
         name = filepath[:-4] 
-        if "\\" not in filepath or "/" not in filepath:
+        filepath = filepath.replace("/", "\\")
+        if "\\" not in filepath:
              filepath = f"{templates_filepath}\\" + filepath
         with open(filepath, "rb") as f:
                     encoding = chardet.detect(f.read())["encoding"]
