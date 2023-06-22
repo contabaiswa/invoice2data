@@ -120,6 +120,8 @@ def extract_data(invoicefile, templates=templates, input_module=None, reload_tem
     logger.debug(extracted_str)
     logger.debug("END pdftotext result =============================")
 
+    optimized_str = extracted_str
+
     # logger.debug("Testing {} template files".format(len(templates)))
     if not template:
         for t in templates:

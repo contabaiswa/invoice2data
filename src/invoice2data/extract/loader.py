@@ -95,7 +95,7 @@ def read_templates(filepath=None, filename=None):
             filepath, encoding=encoding
         ) as template_file:
             tpl = ordered_load(template_file.read())
-        tpl["template_name"] = name
+        tpl["template_name"] = filepath.split("\\")[-1]
 
         # # Test if all required fields are in template:
         # assert "keywords" in tpl.keys(), "Missing keywords field."
